@@ -203,3 +203,9 @@ Ensure the phone numbers in the CSV are strictly numeric and contain the country
 **Error:** Missing `litellm`, `fastapi`, etc.
 **Solution:**
 Ensure you are running the scripts using the python executable inside your virtual environment (`venv/bin/python`), or that you have activated the virtual environment before running `python src/crm_bot.py`.
+
+---
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
