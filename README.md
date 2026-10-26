@@ -1,211 +1,242 @@
 # ACWA (Auto Contact WhatsApp)
 
-> **⚠️ DISCLAIMER: PROJECT DISCONTINUED & INCOMPLETE**
-> This project is incomplete and no longer maintained. While it includes "anti-ban" measures (like randomized delays and UI automation), **ban prevention is NOT guaranteed**. WhatsApp may still flag or ban accounts using this software. Use at your own risk.
+![Python](https://img.shields.io/badge/python-3.10+-blue)
+![Status](https://img.shields.io/badge/status-discontinued-red)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-*Note: This project was built with the help of AI agents.*
+An experimental, AI-driven WhatsApp outreach and negotiation system. ACWA uses Waydroid and ADB to control a WhatsApp Business instance, sends a first message to leads from a CSV file, answers inbound replies with an LLM, and exposes a web dashboard for monitoring.
 
-ACWA is an automated, AI-driven WhatsApp outreach and negotiation system. It leverages Waydroid and ADB to control a WhatsApp Business instance, automatically reaching out to leads from a CSV file, handling inbound replies via an LLM, and providing a web dashboard for monitoring.
+> **Project status: discontinued and incomplete.**
+> This project is no longer maintained. It was built as an experiment, with the help of AI agents, and is published for learning purposes only.
 
-## Key Features
+> **Responsible use**
+> Automating a personal or Business WhatsApp account is **against WhatsApp's Terms of Service**, and accounts that do it can be restricted or permanently banned. The rate-limiting options in this project do not guarantee otherwise. Sending unsolicited bulk messages may also violate anti-spam and data-protection laws in your country (for example TCPA, GDPR, or India's TRAI rules). Only message people who have agreed to hear from you, and use this at your own risk.
 
-- **Automated Outbound Outreach**: Reads pending leads from a CSV, generates a natural, custom AI greeting, and sends it via ADB to the WhatsApp Business app.
-- **Inbound LLM Negotiation**: Listens to Android notifications to detect replies, passes them through LiteLLM for natural conversation, and continues negotiation automatically.
-- **Human Handover**: Automatically detects if a prospect requires human assistance or complex answers, pausing the bot and notifying the user.
-- **FastAPI Web Dashboard**: A built-in web dashboard to view live statistics, lead statuses, and chat history.
-- **Anti-Ban Mechanisms**: Configurable randomized delays between messages to mimic human behavior and avoid WhatsApp spam flags.
+---
+
+## Table of Contents
+
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Getting Started](#getting-started)
+- [Architecture](#architecture)
+- [Configuration](#configuration)
+- [Commands](#commands)
+- [Troubleshooting](#troubleshooting)
+- [License](#license)
+
+---
+
+## Features
+
+- **Outbound messaging**: reads `Pending` leads from a CSV, generates a short custom greeting with an LLM, and sends it through the WhatsApp Business app via ADB.
+- **Inbound replies**: reads Android notifications to detect responses, passes them to an LLM through LiteLLM, and continues the conversation automatically.
+- **Human handover**: pauses the bot and notifies you when a prospect asks for a person or needs a complex answer.
+- **Web dashboard**: a FastAPI dashboard showing live stats, lead statuses, and chat history.
+- **Rate limiting**: configurable random delays between outbound messages.
 
 ---
 
 ## Tech Stack
 
-- **Language**: Python 3
-- **Automation**: ADB (Android Debug Bridge) + Waydroid
-- **AI/LLM**: LiteLLM (Supports Ollama, OpenAI, Anthropic, etc.)
-- **Web Dashboard**: FastAPI + Uvicorn
-- **Data Storage**: CSV (Leads) + JSON (Chat History)
+| Area | Tools |
+|------|-------|
+| Language | Python 3 |
+| Device automation | ADB + Waydroid |
+| LLM | LiteLLM (Ollama, OpenAI, Anthropic, and others) |
+| Dashboard | FastAPI + Uvicorn |
+| Storage | CSV (leads) and JSON (chat history) |
 
 ---
 
 ## Prerequisites
 
-Before setting up ACWA, ensure you have the following installed and running:
-
-- **Python 3.10+**
-- **Waydroid** (or an active Android Emulator / Physical device with ADB enabled)
-- **WhatsApp Business** installed inside Waydroid/Emulator and logged into an account.
-- **ADB (Android Platform Tools)** installed on your host machine.
-- An active LLM API or local Ollama instance running.
+- Python 3.10+
+- Waydroid, or an Android emulator or physical device with ADB enabled
+- WhatsApp Business installed and logged in on that device
+- ADB (Android Platform Tools) on the host machine
+- An LLM API key or a running local Ollama instance
 
 ---
 
 ## Getting Started
 
-### 1. Clone the Repository
+### 1. Clone the repository
 
 ```bash
-git clone https://github.com/user/acwa.git
-cd acwa
+git clone https://github.com/IAmAakib/ACWA.git
+cd ACWA
 ```
 
-### 2. Set Up Python Environment
-
-Create and activate a virtual environment:
+### 2. Set up the Python environment
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
-```
-
-Install the required dependencies:
-
-```bash
 pip install -r requirements.txt
 ```
 
-### 3. Connect to Waydroid via ADB
+### 3. Connect ADB to Waydroid
 
-Ensure Waydroid is running and the UI is active. Connect ADB to the Waydroid container:
+Make sure Waydroid is running with its UI active, then:
 
 ```bash
-# Check Waydroid IP
+# Find the Waydroid IP
 waydroid status
 
-# Connect ADB (Replace with your Waydroid IP)
+# Connect (replace with your IP)
 adb connect 192.168.240.112:5555
-```
 
-Verify the device is connected:
-
-```bash
+# Verify
 adb devices
 ```
 
-### 4. Configure the Project
+### 4. Configure
 
-Edit `src/config.py` to match your environment. Specifically, update `ADB_TARGET_IP` to match the IP you found in the previous step, and set your desired `LITELLM_MODEL`.
+Edit `src/config.py`:
 
-### 5. Prepare the Data
+- Set `ADB_TARGET_IP` to the IP from the previous step.
+- Set `LITELLM_MODEL` to the model you want to use.
 
-Place your leads in `data/WhatsApp_Outreach_Pipeline_Api_Filtered.csv`.
-The CSV must have the following headers:
-`Phone Number`, `Business Name`, `Scraped Flaw/Detail`, `Status`, `Minimum Price Floor`, `Cold Opener Timestamp`, `Last Reply Received`, `AI Assigned Persona/Role`, `Bot Last Message`
+See the [Configuration](#configuration) table for all options.
 
-Make sure the phone numbers contain only digits and include the country code (e.g., `919876543210`). Set the `Status` to `Pending` for new leads.
+### 5. Prepare your leads
 
-### 6. Start the Bot
+Put your leads in `data/WhatsApp_Outreach_Pipeline_Api_Filtered.csv` with these headers:
 
-Run the main CRM bot script:
+```text
+Phone Number, Business Name, Scraped Flaw/Detail, Status, Minimum Price Floor,
+Cold Opener Timestamp, Last Reply Received, AI Assigned Persona/Role, Bot Last Message
+```
+
+- Phone numbers must be digits only and include the country code (for example `919876543210`), with no `+` or `00`.
+- Set `Status` to `Pending` for new leads.
+
+### 6. Run
 
 ```bash
 cd src
 ../venv/bin/python crm_bot.py
 ```
 
-Depending on your `config.py` settings, this will start the outbound outreach, inbound listeners, and the web dashboard concurrently.
+Depending on your `config.py` toggles, this starts the outbound worker, the inbound listener, and the dashboard together.
 
 ---
 
 ## Architecture
 
-### Directory Structure
+### Directory structure
 
 ```text
-acwa/
+ACWA/
 ├── data/
-│   ├── WhatsApp_Outreach_Pipeline_Api_Filtered.csv  # Main leads database
-│   ├── seen_messages.json                           # Tracks processed notifications
-│   ├── reset_cooldown.flag                          # (Optional) Break sleep loop
-│   └── chats/                                       # Individual JSON chat histories
+│   ├── WhatsApp_Outreach_Pipeline_Api_Filtered.csv  # Leads database
+│   ├── seen_messages.json                           # Processed notifications
+│   ├── reset_cooldown.flag                          # Optional: skips the current delay
+│   └── chats/                                       # Per-lead JSON chat histories
 ├── src/
-│   ├── config.py         # Global configuration and feature toggles
-│   ├── crm_bot.py        # Main asyncio entrypoint (workers and listeners)
-│   ├── device.py         # ADB wrapper for WhatsApp UI automation
-│   ├── mock_agent.py     # LiteLLM integration for prompt generation
-│   ├── storage.py        # CSV/JSON file I/O operations
-│   └── web.py            # FastAPI dashboard application
-├── requirements.txt      # Python dependencies
-└── README.md             # This documentation
+│   ├── config.py       # Global settings and feature toggles
+│   ├── crm_bot.py      # Asyncio entrypoint (workers and listeners)
+│   ├── device.py       # ADB wrapper for WhatsApp UI automation
+│   ├── mock_agent.py   # LiteLLM integration and prompt generation
+│   ├── storage.py      # CSV and JSON file I/O
+│   └── web.py          # FastAPI dashboard
+├── requirements.txt
+└── README.md
 ```
 
-### Request Lifecycle (Outbound)
-1. `outbound_worker` in `crm_bot.py` polls `storage.py` for a `Pending` lead.
-2. The lead is passed to `mock_agent.generate_initial_message()`.
-3. The AI generates a customized, casual greeting based on the business name.
-4. `device.py` constructs a WhatsApp intent (`whatsapp://send?phone=...`) and triggers it via ADB.
-5. The device simulates a button press (Keyevent 66 / Enter) to send the message.
-6. The lead's status is updated to `Sent` in the CSV.
+### Outbound flow
 
-### Request Lifecycle (Inbound)
-1. `notification_listener` continuously polls `dumpsys notification` via ADB.
-2. When a notification from `com.whatsapp.w4b` arrives, it extracts the sender and text.
-3. The message is queued to `inbound_worker`.
-4. The system evaluates if the message is a human reply or an Auto-Reply (e.g., "Press 1 for...").
-5. If valid, the chat history is retrieved, and the AI generates a contextual reply.
-6. The reply is sent via ADB, and the CSV status updates to `Negotiating`.
+1. `outbound_worker` in `crm_bot.py` picks a `Pending` lead from `storage.py`.
+2. `mock_agent.generate_initial_message()` writes a casual greeting based on the business name.
+3. `device.py` opens a WhatsApp intent (`whatsapp://send?phone=...`) over ADB.
+4. A simulated Enter key press (keyevent 66) sends the message.
+5. The lead's status is set to `Sent` in the CSV.
+
+### Inbound flow
+
+1. `notification_listener` polls `dumpsys notification` over ADB.
+2. Notifications from `com.whatsapp.w4b` are parsed for sender and text, then queued for `inbound_worker`.
+3. The worker checks whether the message is a human reply or an automated one (for example "Press 1 for...").
+4. For valid replies, the chat history is loaded and the LLM generates a contextual response.
+5. The reply is sent over ADB and the lead's status becomes `Negotiating`.
 
 ---
 
-## Configuration Reference (`src/config.py`)
+## Configuration
+
+All settings live in `src/config.py`.
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `ADB_TARGET_IP` | The IP address and port of your Waydroid/ADB device. | `192.168.240.112:5555` |
-| `LITELLM_MODEL` | The LLM model string for LiteLLM to use for generation. | `ollama/huihui_ai/llama3.2...` |
-| `WEBHOOK_PORT` | Port for the FastAPI Web Dashboard. | `8000` |
-| `ENABLE_OUTBOUND_OUTREACH` | Master switch for automated sending to pending leads. | `True` |
-| `ENABLE_INBOUND_REPLIES` | Switch to enable reading notifications and auto-replying. | `False` |
-| `ENABLE_WEB_DASHBOARD` | Auto-starts `web.py` when running `crm_bot.py`. | `False` |
-| `ENABLE_HUMAN_HANDOVER` | Stops bot and notifies user if client asks for a human. | `True` |
-| `ANTI_BAN_DELAY_MIN` | Minimum seconds to sleep between outbound messages. | `10` |
-| `ANTI_BAN_DELAY_MAX` | Maximum seconds to sleep between outbound messages. | `49` |
+| `ADB_TARGET_IP` | IP and port of the Waydroid/ADB device | `192.168.240.112:5555` |
+| `LITELLM_MODEL` | Model string passed to LiteLLM | `ollama/huihui_ai/llama3.2...` |
+| `WEBHOOK_PORT` | Port for the web dashboard | `8000` |
+| `ENABLE_OUTBOUND_OUTREACH` | Send to pending leads automatically | `True` |
+| `ENABLE_INBOUND_REPLIES` | Read notifications and auto-reply | `False` |
+| `ENABLE_WEB_DASHBOARD` | Start `web.py` together with `crm_bot.py` | `False` |
+| `ENABLE_HUMAN_HANDOVER` | Stop the bot and notify you when a human is requested | `True` |
+| `ANTI_BAN_DELAY_MIN` | Minimum seconds between outbound messages | `10` |
+| `ANTI_BAN_DELAY_MAX` | Maximum seconds between outbound messages | `49` |
 
 ---
 
-## Available Scripts
+## Commands
 
 | Command | Description |
 |---------|-------------|
-| `python src/crm_bot.py` | Starts the main automation loops based on `config.py`. |
-| `uvicorn web:app` | Manually start the FastAPI dashboard from the `src/` directory. |
+| `cd src && ../venv/bin/python crm_bot.py` | Start the automation loops based on `config.py` |
+| `cd src && uvicorn web:app` | Start only the dashboard |
 
-### Resetting the Cooldown
-If the bot is currently in a long anti-ban sleep cycle and you want to force it to proceed immediately, create a flag file:
+### Skipping the delay
+
+To end the current delay early and continue immediately:
+
 ```bash
 touch data/reset_cooldown.flag
 ```
-The bot checks for this file every second, and will instantly break the sleep and delete the flag.
+
+The bot checks for this file every second, then deletes it and resumes.
 
 ---
 
 ## Troubleshooting
 
-### Device Fails to Connect
-**Error:** `Failed to connect device.` or ADB timeout.
-**Solution:**
-1. Ensure Waydroid is running: `waydroid show-full-ui`.
-2. Check the IP address via `waydroid status`.
-3. Update `ADB_TARGET_IP` in `src/config.py` to match the exact IP.
-4. Run `adb connect <YOUR_IP>:5555` manually to ensure your host trusts the device.
+<details>
+<summary><strong>Device fails to connect</strong> (<code>Failed to connect device</code> or ADB timeout)</summary>
 
-### Bot Sends to Wrong Chat or Fails to Send
-**Error:** Failsafe triggered: Number is not on WhatsApp.
-**Solution:**
-Ensure the phone numbers in the CSV are strictly numeric and contain the country code (e.g., 91 for India) without a leading `+` or `00`. `device.py` relies on the WhatsApp URL scheme, which strictly requires this format.
+1. Make sure Waydroid is running: `waydroid show-full-ui`.
+2. Check the IP with `waydroid status`.
+3. Update `ADB_TARGET_IP` in `src/config.py`.
+4. Run `adb connect <YOUR_IP>:5555` manually so the host trusts the device.
 
-### Notifications Not Being Read
-**Error:** Bot doesn't reply to incoming messages.
-**Solution:**
-1. Ensure `ENABLE_INBOUND_REPLIES = True` in `config.py`.
-2. Make sure WhatsApp Business notifications are **enabled** in Android settings, and message previews (content) are visible on the lock screen/notification shade. `dumpsys notification` cannot read redacted/hidden notifications.
+</details>
 
-### "ModuleNotFoundError"
-**Error:** Missing `litellm`, `fastapi`, etc.
-**Solution:**
-Ensure you are running the scripts using the python executable inside your virtual environment (`venv/bin/python`), or that you have activated the virtual environment before running `python src/crm_bot.py`.
+<details>
+<summary><strong>Wrong chat, or message fails to send</strong> (<code>Number is not on WhatsApp</code>)</summary>
+
+Phone numbers must be digits only and include the country code (for example `91` for India), with no leading `+` or `00`. `device.py` relies on the WhatsApp URL scheme, which requires this format.
+
+</details>
+
+<details>
+<summary><strong>Notifications are not being read</strong> (bot never replies)</summary>
+
+1. Set `ENABLE_INBOUND_REPLIES = True` in `config.py`.
+2. Enable WhatsApp Business notifications in Android settings and allow message previews on the lock screen and notification shade. `dumpsys notification` cannot read redacted notifications.
+
+</details>
+
+<details>
+<summary><strong>ModuleNotFoundError</strong> (missing <code>litellm</code>, <code>fastapi</code>, and so on)</summary>
+
+Run the scripts with the virtual environment's Python (`venv/bin/python`), or activate the environment first with `source venv/bin/activate`.
+
+</details>
 
 ---
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Licensed under the MIT License. See [LICENSE](LICENSE) for details.
